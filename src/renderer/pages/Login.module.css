@@ -1,0 +1,275 @@
+.loginPage {
+  height: 100vh;
+  display: flex;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+}
+
+.loginContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: white;
+  padding: 40px;
+  max-width: 480px;
+}
+
+.loginHeader {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo {
+  height: 120px;
+  width: auto;
+  max-width: 180px;
+  margin-bottom: 20px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-text-light);
+}
+
+.loginForm {
+  width: 100%;
+  max-width: 360px;
+}
+
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #FEE2E2;
+  color: var(--color-error);
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 12px;
+  color: var(--color-text-light);
+  pointer-events: none;
+}
+
+.input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  font-size: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: white;
+  transition: all 0.2s;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+}
+
+.input:disabled {
+  background: var(--color-surface);
+  cursor: not-allowed;
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--color-text-light);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover {
+  color: var(--color-text);
+}
+
+.formOptions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.checkbox input {
+  cursor: pointer;
+}
+
+.forgotPassword {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.forgotPassword:hover {
+  text-decoration: underline;
+}
+
+.submitButton {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: var(--color-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: var(--color-primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loadingText {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.loginFooter {
+  margin-top: 32px;
+  text-align: center;
+}
+
+.footerText {
+  font-size: 14px;
+  color: var(--color-text-light);
+  margin-bottom: 8px;
+}
+
+.supportLink {
+  font-size: 14px;
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.supportLink:hover {
+  text-decoration: underline;
+}
+
+.decorativeSide {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: white;
+}
+
+.decorativeContent {
+  max-width: 400px;
+}
+
+.decorativeContent h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+
+.decorativeContent p {
+  font-size: 18px;
+  margin-bottom: 40px;
+  opacity: 0.9;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+}
+
+.featureIcon {
+  font-size: 24px;
+}
+
+.poweredBy {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 70px;
+}
+
+.simpleLogo {
+  height: 60px;
+  width: auto;
+  max-width: 120px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.poweredByText {
+  font-size: 14px;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.poweredByText small {
+  font-size: 11px;
+  opacity: 0.7;
+}

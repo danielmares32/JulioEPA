@@ -1,0 +1,44 @@
+{
+  "appId": "mx.edu.uaa.aulavirtual",
+  "productName": "Aula Virtual 2.0",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "public/**/*",
+    "!**/*.map"
+  ],
+  "mac": {
+    "category": "public.app-category.education",
+    "icon": "public/icon.icns",
+    "hardenedRuntime": true,
+    "gatekeeperAssess": false,
+    "entitlements": "build/entitlements.mac.plist",
+    "entitlementsInherit": "build/entitlements.mac.plist"
+  },
+  "win": {
+    "target": "nsis",
+    "icon": "public/icon.ico"
+  },
+  "linux": {
+    "target": "AppImage",
+    "icon": "public/icon.png",
+    "category": "Education"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "public/icon.ico",
+    "uninstallerIcon": "public/icon.ico",
+    "installerHeaderIcon": "public/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Aula Virtual 2.0"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "uaa",
+    "repo": "aula-virtual-desktop"
+  }
+}
