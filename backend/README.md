@@ -43,14 +43,14 @@ Backend API para la plataforma educativa Aula Virtual de la Universidad Autónom
    DB_PORT=5432
    DB_NAME=aula_virtual
    DB_USER=postgres
-   DB_PASSWORD=tu_password
+   DB_PASSWORD=Xuinos98
    
    # JWT
-   JWT_SECRET=tu-clave-secreta-super-segura
+   JWT_SECRET=your-super-secret-jwt-key-change-in-production
    
    # Servidor
    PORT=3001
-   FRONTEND_URL=http://localhost:5173
+   FRONTEND_URL=http://localhost:3000
    ```
 
 4. **Configurar la base de datos**

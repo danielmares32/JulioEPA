@@ -5,9 +5,9 @@
 }
 
 :root {
-  --color-primary: #1E3A8A;
-  --color-primary-light: #3B82F6;
-  --color-primary-dark: #1E40AF;
+  --color-primary: #1E3A8A !important;
+  --color-primary-light: #1E40AF !important;
+  --color-primary-dark: #1E3A8A !important;
   --color-primary-rgb: 30, 58, 138;
   --color-secondary: #60A5FA;
   --color-background: #FFFFFF;
@@ -29,11 +29,11 @@
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
-/* Dark theme */
+/* Dark theme - FORCE NAVY BLUE */
 [data-theme="dark"] {
-  --color-primary: #3B82F6;
-  --color-primary-light: #60A5FA;
-  --color-primary-dark: #2563EB;
+  --color-primary: #1E3A8A;
+  --color-primary-light: #1E40AF;
+  --color-primary-dark: #1E3A8A;
   --color-background: #111827;
   --color-surface: #1F2937;
   --color-surface-hover: #374151;

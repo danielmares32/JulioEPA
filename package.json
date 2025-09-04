@@ -2,10 +2,10 @@
   "name": "aula-virtual-desktop",
   "version": "1.0.0",
   "description": "Aula Virtual 2.0 - Desktop Application for Universidad Autónoma de Aguascalientes",
-  "main": "dist/main/index.js",
+  "main": "dist/main/main/index.js",
   "scripts": {
-    "demo": "node demo.js",
-    "dev": "npm run build:main && electron .",
+    "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\"",
+    "dev:electron": "npm run build:main && electron .",
     "start": "npm run build && electron .",
     "build": "npm run build:main && npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",

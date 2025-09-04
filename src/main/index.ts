@@ -5,7 +5,6 @@ let mainWindow: BrowserWindow | null = null;
 
 const createWindow = async () => {
   console.log('🎓 Iniciando Aula Virtual 2.0...');
-  console.log('✅ Datos de demostración cargados');
   
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -32,8 +31,7 @@ const createWindow = async () => {
   
   mainWindow.once('ready-to-show', () => {
     console.log('🚀 Aplicación lista - Aula Virtual 2.0');
-    console.log('📧 Login demo: cualquier-email@edu.uaa.mx');
-    console.log('🔐 Password: cualquier-contraseña');
+    console.log('🔐 Conectando con API en http://localhost:3001');
     mainWindow?.show();
   });
 };

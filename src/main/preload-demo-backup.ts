@@ -1,51 +1,13 @@
-import { getDatabase } from './database';
+import { contextBridge } from 'electron';
 
-export interface Course {
-  id: string;
-  title: string;
-  description: string;
-  instructor: string;
-  thumbnail: string;
-  price: number;
-  duration: number;
-  category: string;
-  is_enrolled: boolean;
-  is_downloaded: boolean;
-  progress: number;
-  last_accessed?: string;
-}
-
-export interface User {
-  email: string;
-  name: string;
-  role: string;
-  token?: string;
-}
-
-export interface Activity {
-  type: string;
-  description: string;
-  course_id?: string;
-  created_at: string;
-}
-
-export interface Notification {
-  title: string;
-  body: string;
-  type: string;
-  read: boolean;
-  action_url?: string;
-  created_at: string;
-}
-
-export const seedCourses: Course[] = [
+// Inline seed data for demo
+const seedCourses = [
   {
     id: 'cs101',
     title: 'Fundamentos de Programación',
     description: 'Aprende los conceptos básicos de la programación con Python. Este curso cubre variables, estructuras de control, funciones y programación orientada a objetos.',
     instructor: 'Dr. María González',
     thumbnail: '/images/courses/programming.jpg',
-    price: 1200,
     duration: 120,
     category: 'Ciencias de la Computación',
     is_enrolled: true,
@@ -59,7 +21,6 @@ export const seedCourses: Course[] = [
     description: 'Curso completo de cálculo que abarca límites, derivadas, integrales y sus aplicaciones en ingeniería y ciencias.',
     instructor: 'Dr. Roberto Martínez',
     thumbnail: '/images/courses/calculus.jpg',
-    price: 1500,
     duration: 180,
     category: 'Matemáticas',
     is_enrolled: true,
@@ -73,7 +34,6 @@ export const seedCourses: Course[] = [
     description: 'Desarrolla tus habilidades de comunicación técnica en inglés. Incluye terminología especializada y redacción de documentos técnicos.',
     instructor: 'Prof. Sarah Johnson',
     thumbnail: '/images/courses/english.jpg',
-    price: 900,
     duration: 90,
     category: 'Idiomas',
     is_enrolled: true,
@@ -87,7 +47,6 @@ export const seedCourses: Course[] = [
     description: 'Explora los fundamentos de la IA, incluyendo machine learning, redes neuronales y aplicaciones prácticas en la industria.',
     instructor: 'Dr. Ana López',
     thumbnail: '/images/courses/ai.jpg',
-    price: 2000,
     duration: 150,
     category: 'Ciencias de la Computación',
     is_enrolled: false,
@@ -100,7 +59,6 @@ export const seedCourses: Course[] = [
     description: 'Diseño y administración de bases de datos relacionales y NoSQL. Incluye optimización de consultas y arquitecturas distribuidas.',
     instructor: 'Ing. Carlos Ruiz',
     thumbnail: '/images/courses/database.jpg',
-    price: 1800,
     duration: 160,
     category: 'Ciencias de la Computación',
     is_enrolled: false,
@@ -113,7 +71,6 @@ export const seedCourses: Course[] = [
     description: 'Aprende a desarrollar aplicaciones web completas usando React, Node.js, Express y MongoDB. Proyecto final incluido.',
     instructor: 'Ing. Laura Herrera',
     thumbnail: '/images/courses/webdev.jpg',
-    price: 2200,
     duration: 200,
     category: 'Desarrollo Web',
     is_enrolled: false,
@@ -126,7 +83,6 @@ export const seedCourses: Course[] = [
     description: 'Protege sistemas y redes contra amenazas digitales. Aprende sobre criptografía, firewalls y mejores prácticas de seguridad.',
     instructor: 'Dr. Miguel Torres',
     thumbnail: '/images/courses/cybersecurity.jpg',
-    price: 1600,
     duration: 140,
     category: 'Seguridad',
     is_enrolled: false,
@@ -139,7 +95,6 @@ export const seedCourses: Course[] = [
     description: 'Desarrolla proyectos IoT usando Arduino, Raspberry Pi y sensores. Conecta dispositivos a la nube y crea aplicaciones inteligentes.',
     instructor: 'Ing. Patricia Vargas',
     thumbnail: '/images/courses/iot.jpg',
-    price: 1400,
     duration: 130,
     category: 'Electrónica',
     is_enrolled: true,
@@ -153,7 +108,6 @@ export const seedCourses: Course[] = [
     description: 'Analiza grandes volúmenes de datos usando pandas, NumPy y scikit-learn. Incluye visualización con matplotlib y seaborn.',
     instructor: 'Dr. Fernando Castro',
     thumbnail: '/images/courses/datascience.jpg',
-    price: 1900,
     duration: 170,
     category: 'Ciencia de Datos',
     is_enrolled: false,
@@ -166,7 +120,6 @@ export const seedCourses: Course[] = [
     description: 'Crea aplicaciones móviles nativas para iOS y Android usando React Native. Desde la interfaz hasta la publicación en stores.',
     instructor: 'Ing. Alejandra Morales',
     thumbnail: '/images/courses/mobile.jpg',
-    price: 2100,
     duration: 190,
     category: 'Desarrollo Móvil',
     is_enrolled: false,
@@ -175,25 +128,8 @@ export const seedCourses: Course[] = [
   }
 ];
 
-export const seedUsers: User[] = [
-  {
-    email: 'carlos.martinez@edu.uaa.mx',
-    name: 'Carlos Martínez Rodríguez',
-    role: 'student'
-  },
-  {
-    email: 'ana.garcia@edu.uaa.mx',
-    name: 'Ana García López',
-    role: 'student'
-  },
-  {
-    email: 'dr.gonzalez@uaa.mx',
-    name: 'Dr. María González',
-    role: 'teacher'
-  }
-];
 
-export const seedActivities: Activity[] = [
+const seedActivities = [
   {
     type: 'course_progress',
     description: 'Completaste el módulo "Variables y Tipos de Datos" en Fundamentos de Programación',
@@ -244,7 +180,7 @@ export const seedActivities: Activity[] = [
   }
 ];
 
-export const seedNotifications: Notification[] = [
+const seedNotifications = [
   {
     title: 'Nueva tarea disponible',
     body: 'La tarea "Proyecto Final de Programación" ya está disponible en Fundamentos de Programación',
@@ -287,156 +223,81 @@ export const seedNotifications: Notification[] = [
   }
 ];
 
-export const seedCartItems = [
-  { course_id: 'ai401' },
-  { course_id: 'web601' },
-  { course_id: 'data901' }
-];
-
-export async function initializeSeedData() {
-  const db = getDatabase();
+// Expose API to renderer process
+contextBridge.exposeInMainWorld('electronAPI', {
+  // Auth APIs
+  login: (email: string, _password: string) => 
+    Promise.resolve({ 
+      success: true, 
+      user: { 
+        id: 1,
+        name: 'Carlos Martínez Rodríguez', 
+        email: email,
+        role: 'student' 
+      } 
+    }),
+  logout: () => Promise.resolve(),
+  getStoredToken: () => Promise.resolve('demo_token_123'),
   
-  try {
-    console.log('🌱 Inicializando datos de demostración...');
-    
-    // Clear existing data
-    db.exec('DELETE FROM activities');
-    db.exec('DELETE FROM notifications'); 
-    db.exec('DELETE FROM cart');
-    db.exec('DELETE FROM course_content');
-    db.exec('DELETE FROM courses');
-    db.exec('DELETE FROM users');
-    
-    // Insert demo users
-    const userStmt = db.prepare(`
-      INSERT INTO users (email, name, role, token, created_at)
-      VALUES (?, ?, ?, ?, datetime('now'))
-    `);
-    
-    seedUsers.forEach(user => {
-      userStmt.run(user.email, user.name, user.role, 'demo_token_' + Math.random().toString(36).substr(2, 9));
-    });
-    
-    // Insert demo courses
-    const courseStmt = db.prepare(`
-      INSERT INTO courses (
-        id, title, description, instructor, thumbnail, price, duration, category,
-        is_enrolled, is_downloaded, progress, last_accessed, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-    `);
-    
-    seedCourses.forEach(course => {
-      courseStmt.run(
-        course.id,
-        course.title,
-        course.description,
-        course.instructor,
-        course.thumbnail,
-        course.price,
-        course.duration,
-        course.category,
-        course.is_enrolled ? 1 : 0,
-        course.is_downloaded ? 1 : 0,
-        course.progress,
-        course.last_accessed
-      );
-    });
-    
-    // Insert course content for enrolled courses
-    const contentStmt = db.prepare(`
-      INSERT INTO course_content (course_id, title, type, content, order_index, completed, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-    `);
-    
-    // Content for Programming course
-    const programmingContent = [
-      { title: 'Introducción a Python', type: 'video', content: 'Conceptos básicos del lenguaje Python', completed: 1 },
-      { title: 'Variables y Tipos de Datos', type: 'lesson', content: 'Aprende sobre números, strings y listas', completed: 1 },
-      { title: 'Estructuras de Control', type: 'lesson', content: 'If, for, while y sus aplicaciones', completed: 1 },
-      { title: 'Funciones', type: 'video', content: 'Cómo crear y usar funciones', completed: 1 },
-      { title: 'Programación Orientada a Objetos', type: 'lesson', content: 'Clases, objetos y herencia', completed: 0 },
-      { title: 'Proyecto Final', type: 'assignment', content: 'Desarrolla una aplicación completa', completed: 0 }
-    ];
-    
-    programmingContent.forEach((content, index) => {
-      contentStmt.run('cs101', content.title, content.type, content.content, index + 1, content.completed);
-    });
-    
-    // Content for Calculus course
-    const calculusContent = [
-      { title: 'Límites y Continuidad', type: 'lesson', content: 'Conceptos fundamentales de límites', completed: 1 },
-      { title: 'Derivadas', type: 'video', content: 'Cálculo de derivadas y reglas', completed: 1 },
-      { title: 'Aplicaciones de Derivadas', type: 'lesson', content: 'Optimización y análisis de funciones', completed: 1 },
-      { title: 'Integrales Indefinidas', type: 'lesson', content: 'Antiderivadas y técnicas de integración', completed: 0 },
-      { title: 'Integrales Definidas', type: 'video', content: 'Cálculo de áreas y volúmenes', completed: 0 }
-    ];
-    
-    calculusContent.forEach((content, index) => {
-      contentStmt.run('math201', content.title, content.type, content.content, index + 1, content.completed);
-    });
-    
-    // Insert demo activities
-    const activityStmt = db.prepare(`
-      INSERT INTO activities (user_id, type, description, course_id, created_at)
-      VALUES (1, ?, ?, ?, ?)
-    `);
-    
-    seedActivities.forEach(activity => {
-      activityStmt.run(activity.type, activity.description, activity.course_id, activity.created_at);
-    });
-    
-    // Insert demo notifications
-    const notificationStmt = db.prepare(`
-      INSERT INTO notifications (title, body, type, read, action_url, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `);
-    
-    seedNotifications.forEach(notification => {
-      notificationStmt.run(
-        notification.title,
-        notification.body,
-        notification.type,
-        notification.read ? 1 : 0,
-        notification.action_url,
-        notification.created_at
-      );
-    });
-    
-    // Insert demo cart items
-    const cartStmt = db.prepare(`
-      INSERT INTO cart (course_id, quantity, added_at)
-      VALUES (?, 1, datetime('now'))
-    `);
-    
-    seedCartItems.forEach(item => {
-      cartStmt.run(item.course_id);
-    });
-    
-    // Insert settings
-    const settingsStmt = db.prepare(`
-      INSERT OR REPLACE INTO settings (key, value, updated_at)
-      VALUES (?, ?, datetime('now'))
-    `);
-    
-    settingsStmt.run('app_version', '1.0.0');
-    settingsStmt.run('last_sync', new Date().toISOString());
-    settingsStmt.run('user_preferences', JSON.stringify({
-      theme: 'light',
-      notifications: true,
-      auto_download: false,
-      language: 'es'
-    }));
-    
-    console.log('✅ Datos de demostración inicializados correctamente');
-    console.log(`📚 ${seedCourses.length} cursos agregados`);
-    console.log(`👥 ${seedUsers.length} usuarios creados`);
-    console.log(`📝 ${seedActivities.length} actividades registradas`);
-    console.log(`🔔 ${seedNotifications.length} notificaciones creadas`);
-    console.log(`🛒 ${seedCartItems.length} elementos en carrito`);
-    
-    return true;
-  } catch (error) {
-    console.error('❌ Error al inicializar datos de demostración:', error);
-    return false;
-  }
-}
+  // Course APIs
+  getCourses: () => Promise.resolve(seedCourses),
+  saveCourse: () => Promise.resolve(),
+  enrollCourse: (courseId: string) => {
+    const course = seedCourses.find(c => c.id === courseId);
+    if (course) {
+      course.is_enrolled = true;
+      course.progress = 0;
+      
+      // Check if auto-download is enabled (you'd get this from settings store)
+      const settings = JSON.parse(localStorage.getItem('aula-virtual-settings-storage') || '{}');
+      if (settings.state?.autoDownload) {
+        course.is_downloaded = true;
+        console.log(`Auto-downloading course: ${course.title}`);
+      }
+      
+      console.log(`Enrolled in course: ${course.title}`);
+    }
+    return Promise.resolve({ success: true });
+  },
+  
+  // Offline data
+  getOfflineData: () => Promise.resolve({
+    courses: seedCourses.filter(c => c.is_enrolled),
+    activities: seedActivities,
+    notifications: seedNotifications.filter(n => !n.read)
+  }),
+  
+  // System APIs
+  checkOnlineStatus: () => Promise.resolve(true),
+  minimizeWindow: () => console.log('Window minimized'),
+  maximizeWindow: () => console.log('Window maximized'),
+  closeWindow: () => console.log('Window closed'),
+  showNotification: (title: string, body: string) => {
+    console.log('Notification:', title, body);
+  },
+  onOnlineStatusChange: (_callback: (isOnline: boolean) => void) => {
+    console.log('Online status listener added');
+  },
+  
+  // Settings APIs
+  updateNotificationSettings: (enabled: boolean) => {
+    console.log(`Notification settings updated: ${enabled ? 'enabled' : 'disabled'}`);
+    // Here you would update system notification permissions
+    return Promise.resolve();
+  },
+  
+  updateDownloadSettings: (enabled: boolean) => {
+    console.log(`Auto-download settings updated: ${enabled ? 'enabled' : 'disabled'}`);
+    // Here you would update download behavior for new courses
+    return Promise.resolve();
+  },
+  
+  // Audio API for testing
+  playTestSound: () => {
+    console.log('Playing test sound...');
+    // Here you could play a test notification sound
+    return Promise.resolve();
+  },
+  
+  syncData: () => Promise.resolve()
+});

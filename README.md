@@ -22,18 +22,50 @@ Offline-first educational desktop application that allows students and teachers 
 
 ## 🚀 Quick Start
 
+### Production Setup
+
 ```bash
 # Clone and install
 git clone https://github.com/danielmares32/JulioEPA.git
 cd JulioEPA
 npm install
 
-# Run demo with realistic UAA data
-npm run demo
+# Backend setup
+cd backend
+npm install
+cp .env.example .env
+# Edit .env with your PostgreSQL credentials
+# Default: DB_PASSWORD=Xuinos98
 
-# Or start in development mode
+# Start backend server (port 3001)
 npm run dev
+
+# In another terminal, start frontend
+cd ..
+NODE_ENV=development npm run dev
 ```
+
+### Quick Demo (No Database Required)
+
+```bash
+# For testing without database setup
+npm run demo
+```
+
+## 🔐 Access Information
+
+### Production Login
+- **Desktop App**: Automatically opens after `npm run dev`
+- **Web Access**: http://localhost:3000
+- **API Base**: http://localhost:3001/api
+
+### Credentials
+- **Email**: `admin@uaa.mx`
+- **Password**: `password123`
+
+### Theme
+- **Navy Blue Theme**: #1E3A8A (production default)
+- Auto-applies on application startup
 
 ## 🛠️ Tech Stack
 
