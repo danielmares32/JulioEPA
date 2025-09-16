@@ -115,6 +115,39 @@
   gap: 24px;
 }
 
+/* No Results */
+.noResults {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  padding: 40px 20px;
+}
+
+.noResultsContent {
+  text-align: center;
+  color: var(--color-text-light);
+  max-width: 400px;
+}
+
+.noResultsContent svg {
+  color: var(--color-text-lighter);
+  margin-bottom: 16px;
+}
+
+.noResultsContent h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.noResultsContent p {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+}
+
 /* Connection Status */
 .connectionStatus {
   margin-bottom: 20px;

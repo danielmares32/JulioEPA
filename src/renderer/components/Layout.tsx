@@ -61,12 +61,30 @@ export function Layout() {
     setSidebarVisible(!sidebarVisible);
   };
 
-  const menuItems = [
-    { path: '/dashboard', icon: Home, label: t('dashboard') },
-    { path: '/courses', icon: BookOpen, label: t('courses') },
-    { path: '/profile', icon: User, label: t('profile') },
-    { path: '/settings', icon: Settings, label: t('settings') }
-  ];
+  // Role-based navigation items
+  const getMenuItems = () => {
+    const baseItems = [
+      { path: '/dashboard', icon: Home, label: t('dashboard') },
+      { path: '/courses', icon: BookOpen, label: t('courses') }
+    ];
+
+    // Students get simplified navigation
+    if (user?.role === 'student') {
+      return [
+        ...baseItems,
+        { path: '/profile', icon: User, label: t('profile') }
+      ];
+    }
+
+    // Instructors and admins get full navigation
+    return [
+      ...baseItems,
+      { path: '/profile', icon: User, label: t('profile') },
+      { path: '/settings', icon: Settings, label: t('settings') }
+    ];
+  };
+
+  const menuItems = getMenuItems();
 
   return (
     <div className={styles.layout}>
@@ -165,7 +183,11 @@ export function Layout() {
                 </div>
                 <div className={styles.userDetails}>
                   <p className={styles.userName}>{user?.name}</p>
-                  <p className={styles.userRole}>{user?.role === 'student' ? 'Estudiante' : 'Profesor'}</p>
+                  <p className={styles.userRole}>
+                    {user?.role === 'student' ? 'Estudiante' : 
+                     user?.role === 'instructor' ? 'Instructor' : 
+                     user?.role === 'admin' ? 'Administrador' : 'Usuario'}
+                  </p>
                 </div>
               </div>
               <button onClick={handleLogout} className={styles.logoutButton}>

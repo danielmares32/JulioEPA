@@ -29,6 +29,7 @@ import { LoadingSpinner, ErrorMessage } from '../components/ErrorBoundary';
 import { Course, Enrollment } from '../../shared/types/database';
 import { offlineManager } from '../services/offlineSync';
 import { courseService, getImageUrl } from '../services/api';
+import { useAuthStore } from '../store/authStore';
 import styles from './Courses.module.css';
 
 interface CourseWithEnrollment extends Course {
@@ -40,6 +41,7 @@ interface CourseWithEnrollment extends Course {
 export function CoursesDatabase() {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuthStore();
   
   // API hooks
   const { data: userCourses, loading: coursesLoading, error: coursesError, refetch } = useUserCourses();
@@ -177,6 +179,102 @@ export function CoursesDatabase() {
     
     return matchesSearch && matchesCategory;
   });
+
+  // Helper function to normalize text for search (handle accents, case, etc.)
+  const normalizeForSearch = (text: string) => {
+    return text
+      .toLowerCase()
+      .normalize('NFD') // Decompose accented characters
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics/accents
+      .trim();
+  };
+
+  // Get filtered courses for search (both enrolled and available)
+  const getSearchResults = () => {
+    if (!searchTerm.trim()) return [];
+    
+    const searchNormalized = normalizeForSearch(searchTerm);
+    console.log('Search term:', searchTerm, 'Normalized:', searchNormalized);
+    
+    // Helper function to calculate relevance score for a course
+    const calculateRelevanceScore = (course: any) => {
+      const fieldWeights = [
+        { field: course.title || '', weight: 10 },           // Title most important
+        { field: course.category || '', weight: 8 },         // Category very important  
+        { field: course.instructor?.name || '', weight: 6 }, // Instructor important
+        { field: course.level || '', weight: 4 },            // Level less important
+        { field: course.description || '', weight: 2 }       // Description least important
+      ];
+      
+      let totalScore = 0;
+      let hasMatch = false;
+      
+      fieldWeights.forEach(({ field, weight }) => {
+        if (!field) return;
+        
+        const normalized = normalizeForSearch(field);
+        const words = normalized.split(/\s+/).filter(word => word.length > 0);
+        
+        // Check if search term appears as a complete word or as start of a word
+        const exactWordMatch = words.some(word => word === searchNormalized);
+        const wordStartMatch = words.some(word => word.startsWith(searchNormalized));
+        const substringMatch = searchNormalized.length >= 3 && normalized.includes(searchNormalized);
+        
+        if (exactWordMatch) {
+          totalScore += weight * 3; // Exact match gets 3x weight
+          hasMatch = true;
+        } else if (wordStartMatch) {
+          totalScore += weight * 2; // Word start gets 2x weight
+          hasMatch = true;
+        } else if (substringMatch) {
+          totalScore += weight * 1; // Substring gets 1x weight
+          hasMatch = true;
+        }
+        
+        if (exactWordMatch || wordStartMatch || substringMatch) {
+          console.log(`Match in "${field.substring(0, 30)}..." (weight: ${weight}, score added: ${exactWordMatch ? weight * 3 : wordStartMatch ? weight * 2 : weight})`);
+        }
+      });
+      
+      if (hasMatch) {
+        console.log(`Course "${course.title}" total relevance score: ${totalScore}`);
+      }
+      
+      return { hasMatch, score: totalScore };
+    };
+    
+    // Search enrolled courses with relevance scoring
+    console.log('Searching enrolled courses:', courses.length);
+    const enrolledResults = courses
+      .map(course => {
+        const relevance = calculateRelevanceScore(course);
+        return relevance.hasMatch ? { ...course, isEnrolled: true, relevanceScore: relevance.score } : null;
+      })
+      .filter(Boolean);
+    
+    // Search available courses (not enrolled) with relevance scoring
+    console.log('Searching available courses:', availableCourses.length);
+    const availableResults = availableCourses
+      .filter(course => {
+        // Don't include courses that are already enrolled
+        return !courses.some(enrolled => enrolled.id === course.id);
+      })
+      .map(course => {
+        const relevance = calculateRelevanceScore(course);
+        return relevance.hasMatch ? { ...course, isEnrolled: false, progress: 0, relevanceScore: relevance.score } : null;
+      })
+      .filter(Boolean);
+    
+    console.log('Search results - Enrolled:', enrolledResults.length, 'Available:', availableResults.length);
+    
+    // Combine and sort by relevance score (highest first)
+    const allResults = [...enrolledResults, ...availableResults];
+    const sortedResults = allResults.sort((a, b) => (b.relevanceScore || 0) - (a.relevanceScore || 0));
+    
+    console.log('Final sorted results:', sortedResults.map(r => `${r.title} (score: ${r.relevanceScore})`));
+    
+    return sortedResults;
+  };
 
   const categories = ['all', ...Array.from(new Set(courses.map(course => course.category)))];
 
@@ -487,10 +585,22 @@ export function CoursesDatabase() {
         {/* Search Results */}
         {searchTerm && (
           <div className={styles.searchResults}>
-            <h2 className={styles.sectionTitle}>Resultados para "{searchTerm}"</h2>
-            <div className={styles.coursesGrid}>
-              {filteredCourses.map((course) => renderCourseCard(course, true))}
-            </div>
+            <h2 className={styles.sectionTitle}>
+              Resultados para "{searchTerm}" ({getSearchResults().length} {getSearchResults().length === 1 ? 'curso' : 'cursos'})
+            </h2>
+            {getSearchResults().length === 0 ? (
+              <div className={styles.noResults}>
+                <div className={styles.noResultsContent}>
+                  <Search size={48} />
+                  <h3>No se encontraron cursos</h3>
+                  <p>Intenta con otros términos de búsqueda o explora las categorías disponibles.</p>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.coursesGrid}>
+                {getSearchResults().map((course) => renderCourseCard(course, course.isEnrolled))}
+              </div>
+            )}
           </div>
         )}
 
@@ -498,83 +608,7 @@ export function CoursesDatabase() {
         {!searchTerm && (
           <div className={styles.categoriesContainer}>
             
-            {/* Featured Recommendation Section */}
-            {!isOffline && featuredCourse && (
-              <div className={styles.categorySection}>
-                <div className={styles.categoryHeader}>
-                  <div className={styles.categoryTitle}>
-                    <div className={styles.categoryIcon} style={{ backgroundColor: '#8B5CF6' }}>
-                      <Star size={24} />
-                    </div>
-                    <div>
-                      <h2 className={styles.categoryName}>Curso Destacado</h2>
-                      <span className={styles.courseCount}>Recomendación especial para ti</span>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className={styles.featuredCourseContainer}>
-                  <div className={`${styles.courseCard} ${styles.featuredCard}`}>
-                    <div className={styles.featuredBadge}>
-                      <Star size={12} />
-                      DESTACADO
-                    </div>
-                    <div className={styles.courseImage}>
-                      <img 
-                        src={getImageUrl(featuredCourse.thumbnail || '')} 
-                        alt={featuredCourse.title}
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement;
-                          target.src = getImageUrl('');
-                        }}
-                      />
-                      <div className={styles.courseRating}>
-                        <Star size={12} fill="currentColor" />
-                        {featuredCourse.rating}
-                      </div>
-                    </div>
-                    
-                    <div className={styles.courseContent}>
-                      <span className={styles.courseCategory}>{featuredCourse.category}</span>
-                      <h3 className={styles.courseTitle}>{featuredCourse.title}</h3>
-                      <p className={styles.courseInstructor}>Dr. {featuredCourse.instructor?.name || 'Instructor UAA'}</p>
-                      
-                      <div className={styles.courseStats}>
-                        <div className={styles.courseStat}>
-                          <Clock size={12} />
-                          <span>{formatDuration(featuredCourse.duration)}</span>
-                        </div>
-                        <div className={styles.courseStat}>
-                          <Users size={12} />
-                          <span>{featuredCourse.studentsCount?.toLocaleString() || '0'}</span>
-                        </div>
-                        <div 
-                          className={styles.courseLevel}
-                          style={{ backgroundColor: getCategoryColor(featuredCourse.category) }}
-                        >
-                          {featuredCourse.level}
-                        </div>
-                      </div>
-
-                      <div className={styles.courseFooter}>
-                        <div className={styles.coursePrice}>
-                          {t('free')}
-                        </div>
-                        <button 
-                          onClick={() => handleEnrollCourse(featuredCourse.id)}
-                          className={`${styles.actionBtn} ${styles.enrollBtn}`}
-                          disabled={enrolling === featuredCourse.id}
-                        >
-                          {enrolling === featuredCourse.id ? 'Inscribiendo...' : t('enroll')}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Continue Learning Section */}
+            {/* Continue Learning Section - Always show for enrolled courses */}
             {filteredCourses.length > 0 && (
               <div className={styles.categorySection}>
                 <div className={styles.categoryHeader}>
@@ -583,170 +617,121 @@ export function CoursesDatabase() {
                       <Play size={24} />
                     </div>
                     <div>
-                      <h2 className={styles.categoryName}>Continuar Aprendiendo</h2>
+                      <h2 className={styles.categoryName}>
+                        {user?.role === 'student' ? 'Mis Cursos' : 'Continuar Aprendiendo'}
+                      </h2>
                       <span className={styles.courseCount}>{filteredCourses.length} cursos</span>
                     </div>
                   </div>
-                  <div className={styles.carouselControls}>
-                    <button 
-                      className={`${styles.carouselBtn} ${!carousels['continue-learning']?.canScrollLeft ? styles.disabled : ''}`}
-                      onClick={() => {
-                        console.log('Left button clicked for continue-learning');
-                        scrollCarousel('continue-learning', 'left');
-                      }}
-                      disabled={!carousels['continue-learning']?.canScrollLeft}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button 
-                      className={`${styles.carouselBtn} ${!carousels['continue-learning']?.canScrollRight ? styles.disabled : ''}`}
-                      onClick={() => {
-                        console.log('Right button clicked for continue-learning');
-                        scrollCarousel('continue-learning', 'right');
-                      }}
-                      disabled={!carousels['continue-learning']?.canScrollRight}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className={styles.carouselContainer}>
-                  <div id="carousel-continue-learning" className={styles.coursesCarousel}>
-                    {filteredCourses.slice(0, 8).map((course) => renderCourseCard(course, true))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Recommendations Section */}
-            {!isOffline && recommendedCourses.length > 0 && (
-              <div className={styles.categorySection}>
-                <div className={styles.categoryHeader}>
-                  <div className={styles.categoryTitle}>
-                    <div className={styles.categoryIcon} style={{ backgroundColor: '#F59E0B' }}>
-                      <Zap size={24} />
-                    </div>
-                    <div>
-                      <h2 className={styles.categoryName}>Recomendaciones</h2>
-                      <span className={styles.courseCount}>Cursos seleccionados para ti</span>
-                    </div>
-                  </div>
-                  <div className={styles.carouselControls}>
-                    <button 
-                      className={`${styles.carouselBtn} ${!carousels['recommendations']?.canScrollLeft ? styles.disabled : ''}`}
-                      onClick={() => scrollCarousel('recommendations', 'left')}
-                      disabled={!carousels['recommendations']?.canScrollLeft}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button 
-                      className={`${styles.carouselBtn} ${!carousels['recommendations']?.canScrollRight ? styles.disabled : ''}`}
-                      onClick={() => scrollCarousel('recommendations', 'right')}
-                      disabled={!carousels['recommendations']?.canScrollRight}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className={styles.carouselContainer}>
-                  <div id="carousel-recommendations" className={styles.coursesCarousel}>
-                    {recommendedCourses.map((course) => renderCourseCard(course, false))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Trending Section */}
-            {!isOffline && trendingCourses.length > 0 && (
-              <div className={styles.categorySection}>
-                <div className={styles.categoryHeader}>
-                  <div className={styles.categoryTitle}>
-                    <div className={styles.categoryIcon} style={{ backgroundColor: '#EF4444' }}>
-                      <TrendingUp size={24} />
-                    </div>
-                    <div>
-                      <h2 className={styles.categoryName}>Tendencias</h2>
-                      <span className={styles.courseCount}>Los más populares</span>
-                    </div>
-                  </div>
-                  <div className={styles.carouselControls}>
-                    <button 
-                      className={`${styles.carouselBtn} ${!carousels['trending']?.canScrollLeft ? styles.disabled : ''}`}
-                      onClick={() => scrollCarousel('trending', 'left')}
-                      disabled={!carousels['trending']?.canScrollLeft}
-                    >
-                      <ChevronLeft size={16} />
-                    </button>
-                    <button 
-                      className={`${styles.carouselBtn} ${!carousels['trending']?.canScrollRight ? styles.disabled : ''}`}
-                      onClick={() => scrollCarousel('trending', 'right')}
-                      disabled={!carousels['trending']?.canScrollRight}
-                    >
-                      <ChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-                
-                <div className={styles.carouselContainer}>
-                  <div id="carousel-trending" className={styles.coursesCarousel}>
-                    {trendingCourses.map((course) => renderCourseCard(course, false))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Categories */}
-            {!isOffline && availableCourses.length > 0 && categories.slice(1).map((category) => {
-              const categoryCourses = availableCourses.filter(course => 
-                course.category === category && 
-                !courses.some(enrolled => enrolled.id === course.id)
-              );
-              
-              if (categoryCourses.length === 0) return null;
-              
-              return (
-                <div key={category} className={styles.categorySection}>
-                  <div className={styles.categoryHeader}>
-                    <div className={styles.categoryTitle}>
-                      <div 
-                        className={styles.categoryIcon} 
-                        style={{ backgroundColor: getCategoryColor(category) }}
-                      >
-                        {getCategoryIcon(category)}
-                      </div>
-                      <div>
-                        <h2 className={styles.categoryName}>{category}</h2>
-                        <span className={styles.courseCount}>{categoryCourses.length} cursos</span>
-                      </div>
-                    </div>
+                  {user?.role !== 'student' && (
                     <div className={styles.carouselControls}>
                       <button 
-                        className={`${styles.carouselBtn} ${!carousels[category]?.canScrollLeft ? styles.disabled : ''}`}
-                        onClick={() => scrollCarousel(category, 'left')}
-                        disabled={!carousels[category]?.canScrollLeft}
+                        className={`${styles.carouselBtn} ${!carousels['continue-learning']?.canScrollLeft ? styles.disabled : ''}`}
+                        onClick={() => scrollCarousel('continue-learning', 'left')}
+                        disabled={!carousels['continue-learning']?.canScrollLeft}
                       >
                         <ChevronLeft size={16} />
                       </button>
                       <button 
-                        className={`${styles.carouselBtn} ${!carousels[category]?.canScrollRight ? styles.disabled : ''}`}
-                        onClick={() => scrollCarousel(category, 'right')}
-                        disabled={!carousels[category]?.canScrollRight}
+                        className={`${styles.carouselBtn} ${!carousels['continue-learning']?.canScrollRight ? styles.disabled : ''}`}
+                        onClick={() => scrollCarousel('continue-learning', 'right')}
+                        disabled={!carousels['continue-learning']?.canScrollRight}
                       >
                         <ChevronRight size={16} />
                       </button>
                     </div>
-                  </div>
-                  
-                  <div className={styles.carouselContainer}>
-                    <div id={`carousel-${category}`} className={styles.coursesCarousel}>
-                      {categoryCourses.slice(0, 8).map((course) => renderCourseCard(course, false))}
+                  )}
+                </div>
+                
+                <div className={styles.carouselContainer}>
+                  {user?.role === 'student' ? (
+                    // Simple grid for students
+                    <div className={styles.coursesGrid}>
+                      {filteredCourses.map((course) => renderCourseCard(course, true))}
+                    </div>
+                  ) : (
+                    // Carousel for instructors/admins
+                    <div id="carousel-continue-learning" className={styles.coursesCarousel}>
+                      {filteredCourses.slice(0, 8).map((course) => renderCourseCard(course, true))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Available Courses Section - Simplified for students */}
+            {!isOffline && availableCourses.length > 0 && (
+              <div className={styles.categorySection}>
+                <div className={styles.categoryHeader}>
+                  <div className={styles.categoryTitle}>
+                    <div className={styles.categoryIcon} style={{ backgroundColor: '#3B82F6' }}>
+                      <BookOpen size={24} />
+                    </div>
+                    <div>
+                      <h2 className={styles.categoryName}>
+                        {user?.role === 'student' ? 'Cursos Disponibles' : 'Recomendaciones'}
+                      </h2>
+                      <span className={styles.courseCount}>
+                        {user?.role === 'student' ? 'Explora nuevos cursos' : 'Cursos seleccionados para ti'}
+                      </span>
                     </div>
                   </div>
+                  {user?.role !== 'student' && (
+                    <div className={styles.carouselControls}>
+                      <button 
+                        className={`${styles.carouselBtn} ${!carousels['recommendations']?.canScrollLeft ? styles.disabled : ''}`}
+                        onClick={() => scrollCarousel('recommendations', 'left')}
+                        disabled={!carousels['recommendations']?.canScrollLeft}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                      <button 
+                        className={`${styles.carouselBtn} ${!carousels['recommendations']?.canScrollRight ? styles.disabled : ''}`}
+                        onClick={() => scrollCarousel('recommendations', 'right')}
+                        disabled={!carousels['recommendations']?.canScrollRight}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
+                
+                <div className={styles.carouselContainer}>
+                  {user?.role === 'student' ? (
+                    // Simple grid for students
+                    <div className={styles.coursesGrid}>
+                      {availableCourses
+                        .filter(course => !courses.some(enrolled => enrolled.id === course.id))
+                        .slice(0, 6)
+                        .map((course) => renderCourseCard(course, false))
+                      }
+                    </div>
+                  ) : (
+                    // Full carousel view for instructors/admins
+                    <>
+                      {/* Featured Course */}
+                      {featuredCourse && (
+                        <div className={styles.featuredCourseContainer}>
+                          <div className={`${styles.courseCard} ${styles.featuredCard}`}>
+                            <div className={styles.featuredBadge}>
+                              <Star size={12} />
+                              DESTACADO
+                            </div>
+                            {renderCourseCard(featuredCourse, false)}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Recommendations Carousel */}
+                      <div id="carousel-recommendations" className={styles.coursesCarousel}>
+                        {recommendedCourses.map((course) => renderCourseCard(course, false))}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
+
           </div>
         )}
       </div>
