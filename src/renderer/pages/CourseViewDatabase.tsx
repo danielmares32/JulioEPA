@@ -127,7 +127,14 @@ export function CourseViewDatabase() {
 
   // Update current lesson with content data
   useEffect(() => {
-    if (currentLesson && !currentLesson.quizData && !currentLesson.assignmentData && !currentLesson.readingData) {
+    if (!currentLesson) return;
+    
+    const hasNoData = !currentLesson.quizData && !currentLesson.assignmentData && !currentLesson.readingData;
+    const hasNewData = (currentLesson.type === 'quiz' && quizData && currentLesson.quizData !== quizData) ||
+                      (currentLesson.type === 'assignment' && assignmentData && currentLesson.assignmentData !== assignmentData) ||
+                      (currentLesson.type === 'reading' && readingData && currentLesson.readingData !== readingData);
+    
+    if (hasNoData && hasNewData) {
       const updatedLesson = { ...currentLesson };
       
       if (currentLesson.type === 'quiz' && quizData) {
@@ -140,7 +147,7 @@ export function CourseViewDatabase() {
       
       setCurrentLesson(updatedLesson);
     }
-  }, [currentLesson, quizData, assignmentData, readingData]);
+  }, [currentLesson?.id, currentLesson?.type, quizData, assignmentData, readingData]);
 
   const findFirstIncompleteLesson = (modules: EnhancedModule[]): EnhancedLesson | null => {
     for (const module of modules) {
