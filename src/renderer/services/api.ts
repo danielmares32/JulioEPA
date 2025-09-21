@@ -131,11 +131,11 @@ class ApiClient {
 
   // Lesson Progress Services
   async getLessonProgress(lessonId: string): Promise<ApiResponse<LessonProgress>> {
-    return this.request<LessonProgress>(`/lessons/${lessonId}/progress`);
+    return this.request<LessonProgress>(`/courses/lessons/${lessonId}/progress`);
   }
 
   async updateLessonProgress(request: UpdateLessonProgressRequest): Promise<ApiResponse<LessonProgress>> {
-    return this.request<LessonProgress>(`/lessons/${request.lessonId}/progress`, {
+    return this.request<LessonProgress>(`/courses/lessons/${request.lessonId}/progress`, {
       method: 'PUT',
       body: JSON.stringify(request),
     });
