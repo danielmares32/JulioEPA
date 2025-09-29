@@ -11,51 +11,94 @@ async function seedDatabase() {
     // Create users
     console.log('👤 Creating users...');
     const hashedPassword = await bcrypt.hash('password123', 10);
-    
+
+    // Create admin users
     const adminResult = await query(
-      `INSERT INTO users (email, name, password_hash, role) 
-       VALUES ($1, $2, $3, $4) 
-       ON CONFLICT (email) DO UPDATE SET 
-         name = EXCLUDED.name, 
+      `INSERT INTO users (email, name, password_hash, role)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (email) DO UPDATE SET
+         name = EXCLUDED.name,
          password_hash = EXCLUDED.password_hash,
          role = EXCLUDED.role
        RETURNING *`,
       ['admin@uaa.mx', 'Administrador UAA', hashedPassword, 'admin']
     );
 
-    const instructorResult = await query(
-      `INSERT INTO users (email, name, password_hash, role) 
-       VALUES ($1, $2, $3, $4) 
-       ON CONFLICT (email) DO UPDATE SET 
-         name = EXCLUDED.name, 
-         password_hash = EXCLUDED.password_hash,
-         role = EXCLUDED.role
-       RETURNING *`,
-      ['instructor@uaa.mx', 'Dr. María González', hashedPassword, 'instructor']
+    // Create instructors
+    const instructorsData = [
+      { email: 'instructor@uaa.mx', name: 'Dr. María González', role: 'instructor' },
+      { email: 'carlos.martinez@uaa.mx', name: 'Dr. Carlos Martínez', role: 'instructor' },
+      { email: 'ana.rodriguez@uaa.mx', name: 'Dra. Ana Rodríguez', role: 'instructor' },
+      { email: 'luis.hernandez@uaa.mx', name: 'Mtro. Luis Hernández', role: 'instructor' },
+      { email: 'patricia.lopez@uaa.mx', name: 'Dra. Patricia López', role: 'instructor' }
+    ];
+
+    const instructorPromises = instructorsData.map(instructor =>
+      query(
+        `INSERT INTO users (email, name, password_hash, role)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (email) DO UPDATE SET
+           name = EXCLUDED.name,
+           password_hash = EXCLUDED.password_hash,
+           role = EXCLUDED.role
+         RETURNING *`,
+        [instructor.email, instructor.name, hashedPassword, instructor.role]
+      )
     );
 
-    const studentResult = await query(
-      `INSERT INTO users (email, name, password_hash, role) 
-       VALUES ($1, $2, $3, $4) 
-       ON CONFLICT (email) DO UPDATE SET 
-         name = EXCLUDED.name, 
-         password_hash = EXCLUDED.password_hash,
-         role = EXCLUDED.role
-       RETURNING *`,
-      ['estudiante@uaa.mx', 'Juan Pérez Estudiante', hashedPassword, 'student']
+    const instructorResults = await Promise.all(instructorPromises);
+    const instructors = instructorResults.map(result => result.rows[0]);
+
+    // Create students
+    const studentsData = [
+      { email: 'estudiante@uaa.mx', name: 'Juan Pérez Estudiante' },
+      { email: 'maria.garcia@edu.uaa.mx', name: 'María García Sánchez' },
+      { email: 'jose.lopez@edu.uaa.mx', name: 'José López Ramírez' },
+      { email: 'ana.martinez@edu.uaa.mx', name: 'Ana Martínez Torres' },
+      { email: 'pedro.rodriguez@edu.uaa.mx', name: 'Pedro Rodríguez Silva' },
+      { email: 'laura.hernandez@edu.uaa.mx', name: 'Laura Hernández Díaz' },
+      { email: 'diego.gonzalez@edu.uaa.mx', name: 'Diego González Morales' },
+      { email: 'sofia.perez@edu.uaa.mx', name: 'Sofía Pérez Jiménez' },
+      { email: 'carlos.sanchez@edu.uaa.mx', name: 'Carlos Sánchez Ruiz' },
+      { email: 'fernanda.torres@edu.uaa.mx', name: 'Fernanda Torres Vega' },
+      { email: 'ricardo.morales@edu.uaa.mx', name: 'Ricardo Morales Castro' },
+      { email: 'alejandra.ramirez@edu.uaa.mx', name: 'Alejandra Ramírez Luna' },
+      { email: 'miguel.silva@edu.uaa.mx', name: 'Miguel Silva Ortiz' },
+      { email: 'daniela.vargas@edu.uaa.mx', name: 'Daniela Vargas Mendoza' },
+      { email: 'jorge.mendoza@edu.uaa.mx', name: 'Jorge Mendoza Flores' }
+    ];
+
+    const studentPromises = studentsData.map(student =>
+      query(
+        `INSERT INTO users (email, name, password_hash, role)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (email) DO UPDATE SET
+           name = EXCLUDED.name,
+           password_hash = EXCLUDED.password_hash,
+           role = EXCLUDED.role
+         RETURNING *`,
+        [student.email, student.name, hashedPassword, 'student']
+      )
     );
+
+    const studentResults = await Promise.all(studentPromises);
+    const students = studentResults.map(result => result.rows[0]);
 
     const adminId = adminResult.rows[0].id;
-    const instructorId = instructorResult.rows[0].id;
-    const studentId = studentResult.rows[0].id;
+    const instructorId = instructors[0].id; // Primary instructor
+    const studentId = students[0].id; // Primary student for backward compatibility
 
     // Define categories (as strings since courses table uses category varchar)
     console.log('📂 Setting up categories...');
     const categories = [
       'Ingeniería de Software',
-      'Bases de Datos', 
+      'Bases de Datos',
       'Redes y Comunicaciones',
-      'Inteligencia Artificial'
+      'Inteligencia Artificial',
+      'Desarrollo Móvil',
+      'Ciberseguridad',
+      'Ciencia de Datos',
+      'Arquitectura de Software'
     ];
 
     // Create courses
@@ -64,7 +107,7 @@ async function seedDatabase() {
       {
         title: 'Desarrollo Web Full Stack',
         description: 'Aprende a desarrollar aplicaciones web completas utilizando tecnologías modernas como React, Node.js y bases de datos relacionales.',
-        instructor_id: instructorId,
+        instructor_id: instructors[0].id,
         category: categories[0],
         level: 'Intermedio',
         duration: 120,
@@ -74,7 +117,7 @@ async function seedDatabase() {
       {
         title: 'Diseño de Bases de Datos Avanzado',
         description: 'Domina el diseño y optimización de bases de datos relacionales y NoSQL para aplicaciones empresariales.',
-        instructor_id: instructorId,
+        instructor_id: instructors[1].id,
         category: categories[1],
         level: 'Avanzado',
         duration: 80,
@@ -84,10 +127,100 @@ async function seedDatabase() {
       {
         title: 'Redes de Computadoras',
         description: 'Fundamentos y configuración de redes TCP/IP, protocolos de comunicación y seguridad de redes.',
-        instructor_id: instructorId,
+        instructor_id: instructors[2].id,
         category: categories[2],
         level: 'Intermedio',
         duration: 100,
+        price: 399.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Machine Learning Fundamentals',
+        description: 'Introducción al aprendizaje automático, algoritmos supervisados y no supervisados, redes neuronales básicas.',
+        instructor_id: instructors[3].id,
+        category: categories[3],
+        level: 'Avanzado',
+        duration: 150,
+        price: 799.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Desarrollo de Apps Móviles con React Native',
+        description: 'Crea aplicaciones móviles multiplataforma para iOS y Android usando React Native y JavaScript.',
+        instructor_id: instructors[4].id,
+        category: categories[4],
+        level: 'Intermedio',
+        duration: 110,
+        price: 649.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Fundamentos de Ciberseguridad',
+        description: 'Conceptos esenciales de seguridad informática, ethical hacking, y protección de sistemas.',
+        instructor_id: instructors[0].id,
+        category: categories[5],
+        level: 'Básico',
+        duration: 90,
+        price: 349.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Python para Ciencia de Datos',
+        description: 'Análisis de datos con Python, pandas, numpy, visualización con matplotlib y machine learning básico.',
+        instructor_id: instructors[1].id,
+        category: categories[6],
+        level: 'Intermedio',
+        duration: 140,
+        price: 699.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Microservicios y Arquitectura Cloud',
+        description: 'Diseño de aplicaciones con microservicios, Docker, Kubernetes y despliegue en la nube.',
+        instructor_id: instructors[2].id,
+        category: categories[7],
+        level: 'Avanzado',
+        duration: 160,
+        price: 899.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Introducción a la Programación con JavaScript',
+        description: 'Aprende los fundamentos de programación desde cero con JavaScript, ideal para principiantes.',
+        instructor_id: instructors[3].id,
+        category: categories[0],
+        level: 'Básico',
+        duration: 60,
+        price: 299.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'DevOps y CI/CD',
+        description: 'Automatización de procesos, integración continua, despliegue continuo y cultura DevOps.',
+        instructor_id: instructors[4].id,
+        category: categories[7],
+        level: 'Avanzado',
+        duration: 130,
+        price: 749.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'Blockchain y Criptomonedas',
+        description: 'Fundamentos de blockchain, smart contracts, DeFi y desarrollo en Ethereum.',
+        instructor_id: instructors[0].id,
+        category: categories[0],
+        level: 'Avanzado',
+        duration: 100,
+        price: 599.00,
+        thumbnail: '/images/courses/default-course.png'
+      },
+      {
+        title: 'UX/UI Design para Desarrolladores',
+        description: 'Principios de diseño de interfaces, experiencia de usuario, Figma y prototipado.',
+        instructor_id: instructors[1].id,
+        category: categories[0],
+        level: 'Básico',
+        duration: 70,
         price: 399.00,
         thumbnail: '/images/courses/default-course.png'
       }
@@ -245,14 +378,45 @@ async function seedDatabase() {
 
     const reading = readingResult.rows[0];
 
-    // Enroll the student in the course
+    // Enroll students in courses
     console.log('🎓 Creating enrollments...');
-    await query(
-      `INSERT INTO enrollments (user_id, course_id) 
-       VALUES ($1, $2) 
-       ON CONFLICT (user_id, course_id) DO NOTHING`,
-      [studentId, fullStackCourse.id]
+
+    // Enroll multiple students in different courses
+    const enrollmentData = [
+      // First 5 students in Full Stack course
+      { userId: students[0].id, courseId: courses[0].id },
+      { userId: students[1].id, courseId: courses[0].id },
+      { userId: students[2].id, courseId: courses[0].id },
+      { userId: students[3].id, courseId: courses[0].id },
+      { userId: students[4].id, courseId: courses[0].id },
+      // Next 5 students in Database course
+      { userId: students[5].id, courseId: courses[1].id },
+      { userId: students[6].id, courseId: courses[1].id },
+      { userId: students[7].id, courseId: courses[1].id },
+      { userId: students[8].id, courseId: courses[1].id },
+      { userId: students[9].id, courseId: courses[1].id },
+      // Mixed enrollments for remaining students
+      { userId: students[10].id, courseId: courses[2].id },
+      { userId: students[11].id, courseId: courses[3].id },
+      { userId: students[12].id, courseId: courses[4].id },
+      { userId: students[13].id, courseId: courses[5].id },
+      { userId: students[14].id, courseId: courses[6].id },
+      // Some students enrolled in multiple courses
+      { userId: students[0].id, courseId: courses[3].id },
+      { userId: students[1].id, courseId: courses[4].id },
+      { userId: students[2].id, courseId: courses[5].id },
+    ];
+
+    const enrollmentPromises = enrollmentData.map(enrollment =>
+      query(
+        `INSERT INTO enrollments (user_id, course_id)
+         VALUES ($1, $2)
+         ON CONFLICT (user_id, course_id) DO NOTHING`,
+        [enrollment.userId, enrollment.courseId]
+      )
     );
+
+    await Promise.all(enrollmentPromises);
 
     // Create some lesson progress
     console.log('📈 Creating progress records...');
@@ -272,20 +436,34 @@ async function seedDatabase() {
 
     console.log('✅ Database seeding completed successfully!');
     console.log('📊 Created:');
-    console.log('  - 3 users (admin, instructor, student)');
-    console.log('  - 4 categories');
-    console.log('  - 3 courses');
-    console.log('  - 4 modules');
-    console.log('  - 3 lessons');
+    console.log(`  - ${1 + instructors.length + students.length} users total:`);
+    console.log('    • 1 admin');
+    console.log(`    • ${instructors.length} instructors`);
+    console.log(`    • ${students.length} students`);
+    console.log(`  - ${categories.length} categories`);
+    console.log(`  - ${courses.length} courses with diverse topics`);
+    console.log('  - 4 modules (for primary course)');
+    console.log('  - 3 lessons with different types');
     console.log('  - 1 quiz with 3 questions');
     console.log('  - 1 assignment');
     console.log('  - 1 reading material');
-    console.log('  - Student enrollment and progress');
+    console.log(`  - ${enrollmentData.length} student enrollments across courses`);
     console.log('');
-    console.log('🔑 Test credentials:');
-    console.log('  Admin: admin@uaa.mx / password123');
-    console.log('  Instructor: instructor@uaa.mx / password123');
-    console.log('  Student: estudiante@uaa.mx / password123');
+    console.log('🔑 Test credentials (all passwords: password123):');
+    console.log('');
+    console.log('📋 Admin:');
+    console.log('  • admin@uaa.mx');
+    console.log('');
+    console.log('👨‍🏫 Instructors:');
+    instructorsData.forEach(instructor => {
+      console.log(`  • ${instructor.email}`);
+    });
+    console.log('');
+    console.log('👩‍🎓 Students (first 5):');
+    studentsData.slice(0, 5).forEach(student => {
+      console.log(`  • ${student.email}`);
+    });
+    console.log(`  ... and ${students.length - 5} more students`);
 
   } catch (error) {
     console.error('❌ Seeding failed:', error);
