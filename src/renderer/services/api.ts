@@ -24,12 +24,12 @@ import {
 
 // Base API configuration
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.aulavirtual.uaa.mx' 
+  ? 'http://85.31.235.51:3001/api'
   : 'http://85.31.235.51:3001/api';
 
 // Base URL for assets (without /api suffix)
 export const ASSETS_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://api.aulavirtual.uaa.mx' 
+  ? 'http://85.31.235.51:3001' 
   : 'http://85.31.235.51:3001';
 
 // Helper function to get proper image URLs

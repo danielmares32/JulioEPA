@@ -9,11 +9,18 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, 'dist/renderer'),
     emptyOutDir: true,
+    // Development-like build settings
+    minify: false,
+    sourcemap: true,
     rollupOptions: {
       input: {
         main: path.resolve(__dirname, 'src/renderer/index.html')
       }
     }
+  },
+  // Ensure consistent behavior between dev and build
+  define: {
+    'process.env.NODE_ENV': '"development"'
   },
   resolve: {
     alias: {

@@ -8,14 +8,18 @@
     "dev:electron": "npm run build:main && electron .",
     "start": "npm run build && electron .",
     "build": "npm run build:main && npm run build:renderer",
+    "build:dev": "npm run build:main && NODE_ENV=development npm run build:renderer",
     "build:main": "tsc -p tsconfig.main.json",
     "build:renderer": "vite build",
     "preview": "vite preview",
     "dev:renderer": "vite",
     "electron": "electron .",
     "dist": "npm run build && electron-builder",
+    "dist:dev": "npm run build:dev && electron-builder",
     "dist:win": "npm run build && electron-builder --win",
+    "dist:win:dev": "npm run build:dev && electron-builder --win",
     "dist:mac": "npm run build && electron-builder --mac",
+    "dist:mac:dev": "npm run build:dev && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux",
     "test": "jest",
     "lint": "eslint . --ext .ts,.tsx",
@@ -64,5 +68,102 @@
     "react-dom": "^19.1.1",
     "react-router-dom": "^7.8.2",
     "zustand": "^5.0.8"
+  },
+  "build": {
+    "appId": "mx.edu.uaa.aulavirtual",
+    "productName": "Aula Virtual UAA",
+    "copyright": "Copyright © 2025 Universidad Autónoma de Aguascalientes",
+    "buildVersion": "1.0.0",
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraFiles": [
+      {
+        "from": "public/icons",
+        "to": "icons",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icons/icon-256.ico",
+      "verifyUpdateCodeSignature": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/icons/icon-256.ico",
+      "uninstallerIcon": "public/icons/icon-256.ico",
+      "installerHeaderIcon": "public/icons/icon-256.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Aula Virtual UAA"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        }
+      ],
+      "icon": "public/icons/icon.icns",
+      "category": "public.app-category.education",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
+    },
+    "dmg": {
+      "title": "Aula Virtual UAA ${version}",
+      "icon": "public/icons/icon.icns",
+      "iconSize": 100,
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "contents": [
+        {
+          "x": 410,
+          "y": 190,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 190,
+          "type": "file"
+        }
+      ]
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icons/icon-256.ico",
+      "category": "Education"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "danielmares32",
+      "repo": "JulioEPA"
+    }
   }
 }

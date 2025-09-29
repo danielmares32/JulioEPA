@@ -26,12 +26,23 @@ const createWindow = async () => {
     mainWindow.loadURL('http://localhost:3000');
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+    // In packaged app, renderer files are in the same dist structure
+    const indexPath = path.join(__dirname, '../../renderer/index.html');
+    console.log('📁 Loading renderer from:', indexPath);
+    mainWindow.loadFile(indexPath);
   }
   
+  mainWindow.webContents.on('did-fail-load', (_, __, errorDescription, validatedURL) => {
+    console.error('❌ Failed to load:', errorDescription, 'URL:', validatedURL);
+  });
+
+  mainWindow.webContents.on('did-finish-load', () => {
+    console.log('✅ Renderer loaded successfully');
+  });
+
   mainWindow.once('ready-to-show', () => {
     console.log('🚀 Aplicación lista - Aula Virtual 2.0');
-    console.log('🔐 Conectando con API en http://localhost:3001');
+    console.log('🔐 Conectando con API en http://85.31.235.51:3001');
     mainWindow?.show();
   });
 };

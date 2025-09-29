@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import styles from './Login.module.css';
+import logoUAA from '../public/Logotipo_UAA.jpg';
+import logoSIMPLE from '../public/Logotipo_SIIMPLE.jpg';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ export function LoginPage() {
     <div className={styles.loginPage}>
       <div className={styles.loginContainer}>
         <div className={styles.loginHeader}>
-          <img src="/Logotipo_UAA.jpg" alt="UAA" className={styles.logo} />
+          <img src={logoUAA} alt="UAA" className={styles.logo} />
           <h1 className={styles.title}>Aula Virtual 2.0</h1>
           <p className={styles.subtitle}>Universidad Autónoma de Aguascalientes</p>
         </div>
@@ -160,7 +162,7 @@ export function LoginPage() {
           </div>
           
           <div className={styles.poweredBy}>
-            <img src="/Logotipo_SIIMPLE.jpg" alt="SIMPLE" className={styles.simpleLogo} />
+            <img src={logoSIMPLE} alt="SIMPLE" className={styles.simpleLogo} />
             <p className={styles.poweredByText}>
               Powered by SIMPLE
               <br />

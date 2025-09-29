@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter, createHashRouter, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { AuthLayout } from './components/AuthLayout';
 import { LoginPage } from './pages/Login';
@@ -9,7 +9,7 @@ import { ProfilePage } from './pages/Profile';
 import { SettingsPage } from './pages/Settings';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
-export const router = createBrowserRouter([
+const routes = [
   {
     path: '/',
     element: <ProtectedRoute><Layout /></ProtectedRoute>,
@@ -50,4 +50,9 @@ export const router = createBrowserRouter([
       }
     ]
   }
-]);
+];
+
+// Use HashRouter for Electron environment, BrowserRouter for development
+export const router = typeof window !== 'undefined' && window.location.protocol === 'file:'
+  ? createHashRouter(routes)
+  : createBrowserRouter(routes);

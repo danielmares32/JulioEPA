@@ -18,6 +18,7 @@ import { useAuthStore } from '../store/authStore';
 import { useTranslation } from '../hooks/useLanguage';
 import { ConnectionStatus } from './ConnectionStatus';
 import styles from './Layout.module.css';
+import logoUAA from '../public/Logotipo_UAA.jpg';
 
 export function Layout() {
   const navigate = useNavigate();
@@ -92,7 +93,7 @@ export function Layout() {
       <div className={`${styles.titleBar} drag-region`}>
         <div className={styles.titleBarContent}>
           <div className={styles.logo}>
-            <img src="/Logotipo_UAA.jpg" alt="UAA" className={styles.logoImage} />
+            <img src={logoUAA} alt="UAA" className={styles.logoImage} />
             <span className={styles.appTitle}>Aula Virtual 2.0</span>
           </div>
           
